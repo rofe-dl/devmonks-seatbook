@@ -40,6 +40,12 @@ cd client && npm install && npm run dev
 
 You need a Postgres running at the `DATABASE_URL` in `server/.env`.
 
+To use the existing Docker service just for Postgres, run
+
+```bash
+docker compose up -d db
+```
+
 ## Scripts
 
 | | server | client |
