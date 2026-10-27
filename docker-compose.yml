@@ -15,15 +15,30 @@ services:
       timeout: 3s
       retries: 20
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
   server:
     build: ./server
     environment:
       DATABASE_URL: postgresql://seatbook:seatbook@db:5432/seatbook
+      REDIS_URL: redis://redis:6379
       PORT: 4000
     ports:
       - "4000:4000"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./server/src:/app/src
@@ -42,3 +57,4 @@ services:
 
 volumes:
   db-data:
+  redis-data:
