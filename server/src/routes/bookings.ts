@@ -2,6 +2,8 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { formatPrice } from '../utils/helpers';
+import { checkSeatAvailability, reservationKey } from '../services/bookingService';
+import redisClient from '../redis'
 
 const router = Router();
 
@@ -9,34 +11,34 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { seatId } = req.body;
 
-    const seat = await prisma.seat.findUnique({
-      where: { id: Number(seatId) },
-      include: { event: true },
-    });
+    const REDIS_KEY = reservationKey(seatId)
+    const existingReservation = await redisClient.get(REDIS_KEY)
 
-    if (!seat) {
-      return res.status(404).json({ error: 'Seat not found' });
+    if (!existingReservation) {
+      // they should not be able to book a seat directly without having a reservation first
+      return res.status(400).json({ error: 'Please reserve the seat before confirming booking' })
+    } else if (existingReservation !== req.user?.id.toString()) {
+      return res.status(403).json({ error: 'This seat has already been reserved' })
     }
 
-    if (seat.event.startsAt < new Date()) {
-      return res.status(400).json({ msg: 'This event has already started' });
-    }
+    const result = await checkSeatAvailability(Number(seatId));
 
-    const existing = await prisma.booking.findFirst({
-      where: { seatId: seat.id, status: 'CONFIRMED' },
-    });
-
-    if (existing) {
-      return res.status(409).json({ error: 'Seat already booked' });
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error });
     }
 
     const booking = await prisma.booking.create({
       data: {
-        seatId: seat.id,
+        seatId: result.seat.id,
         userId: req.user!.id,
         status: 'CONFIRMED',
       },
     });
+
+    // TODO: Have some actual logger maybe
+    redisClient.del(REDIS_KEY).catch((err) => {
+      console.log(err)
+    })
 
     res.status(201).json(booking);
   } catch (err: any) {
@@ -76,6 +78,7 @@ router.get('/mine', requireAuth, async (req: AuthRequest, res) => {
 router.post('/:id/cancel', requireAuth, async (req: AuthRequest, res) => {
   const id = parseInt(req.params.id);
 
+  // TODO: Needs validation and security checks here
   await prisma.booking.updateMany({
     where: { id, status: 'CONFIRMED' },
     data: { status: 'CANCELLED', cancelledAt: new Date() },

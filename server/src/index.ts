@@ -4,6 +4,7 @@ import redis from './redis';
 import authRoutes from './routes/auth';
 import eventRoutes from './routes/events';
 import bookingRoutes from './routes/bookings';
+import reservationRoutes from './routes/reservations'
 import 'dotenv/config'
 
 const app = express();
@@ -18,6 +19,7 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/events', eventRoutes);
 app.use('/bookings', bookingRoutes);
+app.use('/reservations', reservationRoutes);
 
 const PORT = process.env.PORT || 4000;
 

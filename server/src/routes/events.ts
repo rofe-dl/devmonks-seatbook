@@ -2,7 +2,9 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { getEventWithSeats, listEvents } from '../services/eventService';
+import { reservationKey } from '../services/bookingService';
 import { formatPrice, seatLabel } from '../utils/helpers';
+import redisClient from '../redis';
 
 const router = Router();
 
@@ -18,12 +20,17 @@ router.get('/:id', async (req, res) => {
     return res.json({ success: false, message: 'Event not found' });
   }
 
-  const seats = event.seats.map((seat) => ({
+  // Merge active reservations (Redis) with confirmed bookings (DB) in one round trip.
+  const holders = await redisClient.mget(
+    event.seats.map((seat) => reservationKey(seat.id))
+  );
+
+  const seats = event.seats.map((seat, i) => ({
     id: seat.id,
     row: seat.row,
     col: seat.col,
     label: seat.label,
-    available: seat.bookings.length === 0,
+    available: seat.bookings.length === 0 && !holders[i],
   }));
 
   res.json({
@@ -53,7 +60,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     }
 
     if (rows > 26 || cols > 30) {
-      return res.status(400).json({ msg: 'Seat grid too large (max 26 rows x 30 cols)' });
+      return res.status(400).json({ error: 'Seat grid too large (max 26 rows x 30 cols)' });
     }
 
     const seats = [];
