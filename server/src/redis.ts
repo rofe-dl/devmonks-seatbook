@@ -95,6 +95,11 @@ class RedisClient {
     return this.raw.expire(key, ttlSeconds);
   }
 
+  mget(keys: string[]): Promise<(string | null)[]> {
+    if (keys.length === 0) return Promise.resolve([]);
+    return this.raw.mget(...keys);
+  }
+
   hGet(key: string, field: string): Promise<string | null> {
     return this.raw.hget(key, field);
   }
