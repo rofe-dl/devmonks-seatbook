@@ -5,3 +5,4 @@
 5. Check if redirected to login page if token expires
 6. Add proper loading skeletons?
 7. Do an env validation check
+8. Fix server url in FE

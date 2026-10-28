@@ -73,8 +73,6 @@ class RedisClient {
     }
   }
 
-  // --- Convenience passthroughs ---
-
   get(key: string): Promise<string | null> {
     return this.raw.get(key);
   }

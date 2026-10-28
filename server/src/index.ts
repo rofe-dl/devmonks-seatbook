@@ -4,6 +4,7 @@ import redis from './redis';
 import authRoutes from './routes/auth';
 import eventRoutes from './routes/events';
 import bookingRoutes from './routes/bookings';
+import 'dotenv/config'
 
 const app = express();
 
