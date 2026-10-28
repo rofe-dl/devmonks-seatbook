@@ -6,3 +6,7 @@
 6. Add proper loading skeletons?
 7. Do an env validation check
 8. Fix server url in FE
+9. Add unique index to booking to prevent duplicates
+10. Proper error handling to hide error messages
+11. Rate limiting?
+12. Add validation layer
