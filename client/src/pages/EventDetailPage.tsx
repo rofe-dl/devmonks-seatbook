@@ -8,6 +8,8 @@ export default function EventDetailPage() {
   const [rows, setRows] = useState<any[][]>([]);
   const [selectedSeat, setSelectedSeat] = useState<any>(null);
   const [availableCount, setAvailableCount] = useState(0);
+  const [reservationExpiry, setReservationExpiry] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
 
   const fetchEvent = () => {
@@ -31,9 +33,46 @@ export default function EventDetailPage() {
       });
   };
 
+  const fetchUserReservations = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch(`http://localhost:4000/reservations/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setSelectedSeat(data.seat);
+          setReservationExpiry(new Date(data.expiresAt).getTime());
+        }
+      });
+  }
+
   useEffect(() => {
     fetchEvent();
+    fetchUserReservations();
   }, [id]);
+
+  useEffect(() => {
+    if (reservationExpiry === null) return;
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((reservationExpiry - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        setReservationExpiry(null);
+        setSelectedSeat(null);
+        setToast({ type: 'error', message: '⏰ Your reservation expired - pick a seat!' });
+        setTimeout(() => setToast(null), 3000);
+        fetchEvent();
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [reservationExpiry]);
 
   const handleReservation = async (seat: any) => {
     setSelectedSeat(seat)
@@ -56,6 +95,9 @@ export default function EventDetailPage() {
       setToast({ type: 'error', message: '😢 ' + data.error });
       setTimeout(() => setToast(null), 3000);
       setSelectedSeat(null)
+    } else {
+      setReservationExpiry(new Date(data.expiresAt).getTime());
+      fetchEvent();
     }
 
   }
@@ -141,6 +183,16 @@ export default function EventDetailPage() {
             {availableCount} of {event.seats.length} available · {percentBooked}% booked 🔥
           </p>
           <div className="w-full h-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] mb-10 opacity-60"></div>
+          {reservationExpiry !== null && selectedSeat && (
+            <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#ec4899]/40 bg-gradient-to-r from-[#ec4899]/15 to-[#f97316]/15 px-5 py-4">
+              <span className="text-sm font-semibold text-white/80">
+                🪑 Seat {selectedSeat.label} is held - finish booking before it drops!
+              </span>
+              <span className={`font-mono text-2xl font-bold ${timeLeft <= 60 ? 'animate-pulse text-red-400' : 'text-[#f9a8d4]'}`}>
+                {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+              </span>
+            </div>
+          )}
           <div className="space-y-3">
             {rows.map((row, i) => (
               <div key={i} className="flex gap-3 justify-center">
