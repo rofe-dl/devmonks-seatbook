@@ -35,6 +35,31 @@ export default function EventDetailPage() {
     fetchEvent();
   }, [id]);
 
+  const handleReservation = async (seat: any) => {
+    setSelectedSeat(seat)
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const res = await fetch(`http://localhost:4000/reservations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ seatId: seat.id }),
+    })
+
+    const data = await res.json()
+
+    if (data.error) {
+      setToast({ type: 'error', message: '😢 ' + data.error });
+      setTimeout(() => setToast(null), 3000);
+      setSelectedSeat(null)
+    }
+
+  }
+
   const handleBook = async () => {
     if (!selectedSeat) {
       setToast({ type: 'error', message: 'Please select a seat first! 🪑' });
@@ -85,11 +110,10 @@ export default function EventDetailPage() {
     <div>
       {toast && (
         <div
-          className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl font-medium ${
-            toast.type === 'success'
-              ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a]'
-              : 'bg-gradient-to-r from-[#ef4444] to-[#dc2626]'
-          }`}
+          className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl font-medium ${toast.type === 'success'
+            ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a]'
+            : 'bg-gradient-to-r from-[#ef4444] to-[#dc2626]'
+            }`}
         >
           {toast.message}
         </div>
@@ -123,14 +147,13 @@ export default function EventDetailPage() {
                 {row.map((seat: any) => (
                   <div
                     key={seat.id}
-                    onClick={() => setSelectedSeat(seat)}
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 hover:scale-110 ${
-                      selectedSeat?.id === seat.id
-                        ? 'bg-gradient-to-br from-[#ec4899] to-[#f97316] shadow-lg shadow-pink-500/50 scale-110'
-                        : seat.available
+                    onClick={() => handleReservation(seat)}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 hover:scale-110 ${selectedSeat?.id === seat.id
+                      ? 'bg-gradient-to-br from-[#ec4899] to-[#f97316] shadow-lg shadow-pink-500/50 scale-110'
+                      : seat.available
                         ? 'bg-gradient-to-br from-[#a855f7]/60 to-[#6366f1]/60 hover:from-[#a855f7] hover:to-[#6366f1]'
                         : 'bg-gradient-to-br from-[#a855f7]/20 to-[#6366f1]/20 text-white/30'
-                    }`}
+                      }`}
                   >
                     {seat.label}
                   </div>
