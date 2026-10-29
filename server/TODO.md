@@ -10,3 +10,10 @@
 10. Proper error handling to hide error messages
 11. Rate limiting?
 12. Add validation layer
+13. Proper TypeScript types
+14. Frontend design system
+
+Possible problems:
+1. Unique index on booking for seatId + status
+2. Redis goes down
+3. User reserves a seat, then reloads the page
