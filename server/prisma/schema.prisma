@@ -26,6 +26,7 @@ model User {
   role         Role      @default(ATTENDEE)
   events       Event[]
   bookings     Booking[]
+  reservations Reservation[]
   createdAt    DateTime  @default(now())
 }
 
@@ -39,9 +40,10 @@ model Event {
   cols        Int
   priceCents  Int
   organizerId Int
-  organizer   User     @relation(fields: [organizerId], references: [id])
-  seats       Seat[]
-  createdAt   DateTime @default(now())
+  organizer    User        @relation(fields: [organizerId], references: [id])
+  seats        Seat[]
+  reservations Reservation[]
+  createdAt    DateTime    @default(now())
 }
 
 model Seat {
@@ -52,6 +54,7 @@ model Seat {
   col      Int
   label    String
   bookings Booking[]
+  reservations Reservation[]
 
   @@unique([eventId, row, col])
 }
@@ -65,4 +68,18 @@ model Booking {
   status      BookingStatus @default(CONFIRMED)
   createdAt   DateTime      @default(now())
   cancelledAt DateTime?
+}
+
+model Reservation {
+  id        Int      @id @default(autoincrement())
+  seatId    Int      @unique
+  seat      Seat     @relation(fields: [seatId], references: [id], onDelete: Cascade)
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
 }

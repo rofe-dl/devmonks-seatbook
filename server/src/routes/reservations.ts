@@ -1,14 +1,31 @@
-
 import { Router } from 'express';
+import { Reservation, Seat } from '@prisma/client';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { checkSeatAvailability, seatReservationKey, userReservationKey } from '../services/bookingService';
-import redisClient from '../redis'
+import { reserveSeat, getUserEventReservation } from '../services/bookingService';
 
 const router = Router();
 
+/**
+ * Response shape for a reservation: the seat it holds plus the expiry the
+ * client needs for its countdown timer.
+ */
+function reservationPayload(r: Reservation & { seat: Seat }) {
+  return {
+    id: r.id,
+    seatId: r.seatId,
+    seat: {
+      id: r.seat.id,
+      label: r.seat.label,
+      row: r.seat.row,
+      col: r.seat.col,
+    },
+    expiresAt: r.expiresAt,
+    createdAt: r.createdAt,
+  };
+}
+
 router.post('/', requireAuth, async (req: AuthRequest, res) => {
   try {
-    // TODO: When creating booking, check if existing seat is confirmed to prevent race condition, add unique index for that
     // TODO: If user picks seat already reserved or booked, mark it on FE immediately as well
     const { seatId } = req.body;
 
@@ -16,43 +33,38 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: "User ID not found!" });
     }
 
-    const result = await checkSeatAvailability(Number(seatId));
+    const result = await reserveSeat(req.user.id, Number(seatId));
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });
     }
 
-    const REDIS_KEY_SEAT_TO_USER = seatReservationKey(seatId)
-    const REDIS_KEY_USER_TO_SEAT = userReservationKey(req.user.id)
-    const TTL = 300 // 5 minutes
+    res.status(result.status).json(reservationPayload(result.reservation));
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    // Concurrent reads: what the user currently holds, and who holds the target seat
-    const [currentSeat, seatHolder] = await Promise.all([
-      redisClient.get(REDIS_KEY_USER_TO_SEAT),
-      redisClient.get(REDIS_KEY_SEAT_TO_USER),
-    ])
+// The caller's active (non-expired) reservation for a specific event, if any.
+router.get('/:eventId', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const eventId = Number(req.params.eventId);
 
-    // Idempotent re-reservation of the same seat (no TTL refresh)
-    if (currentSeat === seatId.toString()) {
-      return res.status(204).send()
+    if (!Number.isFinite(eventId) || eventId <= 0) {
+      return res.status(400).json({ error: 'Invalid event ID' });
     }
 
-    if (seatHolder && seatHolder !== req.user.id.toString()) {
-      return res.status(409).json({ error: 'This seat has already been reserved' })
+    if (!req.user?.id) {
+      return res.status(500).json({ error: "User ID not found!" });
     }
 
-    // Release the seat the user currently holds, if any
-    if (currentSeat) {
-      await redisClient.del(seatReservationKey(currentSeat), REDIS_KEY_USER_TO_SEAT)
+    const reservation = await getUserEventReservation(req.user.id, eventId);
+
+    if (!reservation) {
+      return res.json(null);
     }
 
-    // Take the new seat and point the user at it
-    await Promise.all([
-      redisClient.set(REDIS_KEY_SEAT_TO_USER, req.user.id.toString(), TTL),
-      redisClient.set(REDIS_KEY_USER_TO_SEAT, seatId.toString(), TTL),
-    ])
-
-    res.status(201).send()
+    res.json(reservationPayload(reservation));
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -12,8 +12,8 @@
 12. Add validation layer
 13. Proper TypeScript types
 14. Frontend design system
+15. Pagination in events
 
 Possible problems:
 1. Unique index on booking for seatId + status
-2. Redis goes down
-3. User reserves a seat, then reloads the page
+2. User reserves a seat, then reloads the page

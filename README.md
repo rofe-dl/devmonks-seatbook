@@ -4,7 +4,7 @@ Seat booking for small venues. Organizers publish an event with a seat grid, att
 
 ## Stack
 
-- **server/**: Node, Express, TypeScript, Prisma, Postgres, Redis
+- **server/**: Node, Express, TypeScript, Prisma, Postgres
 - **client/**: React, Vite, TypeScript, Tailwind
 
 ## Run it
@@ -16,7 +16,6 @@ docker compose up --build
 - App: http://localhost:5173
 - API: http://localhost:4000
 - Postgres: `localhost:5433` (user / password / db: `seatbook`)
-- Redis: `localhost:6379`
 
 The database is migrated and seeded on first start. To start from a clean database: `docker compose down -v`.
 
@@ -39,12 +38,12 @@ cd server && cp .env.example .env && npm install && npm run db:migrate && npm ru
 cd client && npm install && npm run dev
 ```
 
-You need a Postgres running at the `DATABASE_URL` and a Redis running at `REDIS_URL` in `server/.env`.
+You need a Postgres running at the `DATABASE_URL` in `server/.env`.
 
-However, to use the existing Docker service for Redis and Postgres, run
+However, to use the existing Docker service for Postgres, run
 
 ```bash
-docker compose up -d db redis
+docker compose up -d db
 ```
 
 ## Scripts

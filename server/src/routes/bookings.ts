@@ -2,8 +2,7 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { formatPrice } from '../utils/helpers';
-import { checkSeatAvailability, seatReservationKey, userReservationKey } from '../services/bookingService';
-import redisClient from '../redis'
+import { bookReservedSeat } from '../services/bookingService';
 
 const router = Router();
 
@@ -11,38 +10,13 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { seatId } = req.body;
 
-    const REDIS_KEY_SEAT_TO_USER = seatReservationKey(seatId)
-    const REDIS_KEY_USER_TO_SEAT = userReservationKey(req.user!.id?.toString())
-
-    const existingReservation = await redisClient.get(REDIS_KEY_SEAT_TO_USER)
-
-    if (!existingReservation) {
-      // they should not be able to book a seat directly without having a reservation first
-      return res.status(400).json({ error: 'Please reserve the seat before confirming booking' })
-    } else if (existingReservation !== req.user?.id.toString()) {
-      return res.status(403).json({ error: 'This seat has already been reserved' })
-    }
-
-    const result = await checkSeatAvailability(Number(seatId));
+    const result = await bookReservedSeat(req.user!.id, Number(seatId));
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        seatId: result.seat.id,
-        userId: req.user!.id,
-        status: 'CONFIRMED',
-      },
-    });
-
-    // TODO: Have some actual logger maybe
-    redisClient.del(REDIS_KEY_SEAT_TO_USER, REDIS_KEY_USER_TO_SEAT).catch((err) => {
-      console.log(err)
-    })
-
-    res.status(201).json(booking);
+    res.status(201).json(result.booking);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

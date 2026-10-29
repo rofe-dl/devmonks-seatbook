@@ -2,13 +2,13 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { getEventWithSeats, listEvents } from '../services/eventService';
-import { seatReservationKey } from '../services/bookingService';
+import { getEventReservationHolders } from '../services/bookingService';
 import { formatPrice, seatLabel } from '../utils/helpers';
-import redisClient from '../redis';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
+  // TODO: Pagination
   const events = await listEvents();
   res.json(events);
 });
@@ -20,17 +20,15 @@ router.get('/:id', async (req, res) => {
     return res.json({ success: false, message: 'Event not found' });
   }
 
-  // Merge active reservations (Redis) with confirmed bookings (DB) in one round trip.
-  const holders = await redisClient.mget(
-    event.seats.map((seat) => seatReservationKey(seat.id))
-  );
+  // Merge active reservations (DB) with confirmed bookings (DB).
+  const holders = await getEventReservationHolders(event.id);
 
-  const seats = event.seats.map((seat, i) => ({
+  const seats = event.seats.map((seat) => ({
     id: seat.id,
     row: seat.row,
     col: seat.col,
     label: seat.label,
-    available: seat.bookings.length === 0 && !holders[i],
+    available: seat.bookings.length === 0 && !holders.has(seat.id),
   }));
 
   res.json({
