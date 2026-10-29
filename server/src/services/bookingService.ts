@@ -2,8 +2,13 @@ import { Event, Seat } from '@prisma/client';
 import prisma from '../db';
 
 /** Redis key for a seat's active reservation (value = holder's userId). */
-export function reservationKey(seatId: number | string): string {
+export function seatReservationKey(seatId: number | string): string {
   return `reservation:seat:${seatId}`;
+}
+
+/** Redis key for a user's active reservation (value = reserved seatId). */
+export function userReservationKey(userId: number | string): string {
+  return `reservation:user:${userId}`;
 }
 
 export type SeatWithEvent = Seat & { event: Event };

@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import { requireAuth, AuthRequest } from '../middleware/auth';
-import { checkSeatAvailability, reservationKey } from '../services/bookingService';
+import { checkSeatAvailability, seatReservationKey, userReservationKey } from '../services/bookingService';
 import redisClient from '../redis'
 
 const router = Router();
@@ -16,53 +16,43 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: "User ID not found!" });
     }
 
-    const REDIS_KEY = reservationKey(seatId)
-    const REDIS_VALUE = req.user.id.toString()
-    const TTL = 600
-
     const result = await checkSeatAvailability(Number(seatId));
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });
     }
 
-    const existingReservation = await redisClient.get(REDIS_KEY);
+    const REDIS_KEY_SEAT_TO_USER = seatReservationKey(seatId)
+    const REDIS_KEY_USER_TO_SEAT = userReservationKey(req.user.id)
+    const TTL = 300 // 5 minutes
 
-    if (existingReservation) {
-      if (existingReservation === req.user.id.toString()) {
-        return res.status(204)
-      }
+    // Concurrent reads: what the user currently holds, and who holds the target seat
+    const [currentSeat, seatHolder] = await Promise.all([
+      redisClient.get(REDIS_KEY_USER_TO_SEAT),
+      redisClient.get(REDIS_KEY_SEAT_TO_USER),
+    ])
 
+    // Idempotent re-reservation of the same seat (no TTL refresh)
+    if (currentSeat === seatId.toString()) {
+      return res.status(204).send()
+    }
+
+    if (seatHolder && seatHolder !== req.user.id.toString()) {
       return res.status(409).json({ error: 'This seat has already been reserved' })
     }
 
-    await redisClient.set(REDIS_KEY, REDIS_VALUE, TTL)
-
-    res.status(201);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.delete('/:seatId', requireAuth, async (req: AuthRequest, res) => {
-  try {
-    if (!req.user?.id) {
-      return res.status(500).json({ error: "User ID not found!" });
-    } else if (!req.params.seatId) {
-      return res.status(400).json({ error: "Seat ID not found!" });
+    // Release the seat the user currently holds, if any
+    if (currentSeat) {
+      await redisClient.del(seatReservationKey(currentSeat), REDIS_KEY_USER_TO_SEAT)
     }
 
-    const REDIS_KEY = reservationKey(req.params.seatId)
+    // Take the new seat and point the user at it
+    await Promise.all([
+      redisClient.set(REDIS_KEY_SEAT_TO_USER, req.user.id.toString(), TTL),
+      redisClient.set(REDIS_KEY_USER_TO_SEAT, seatId.toString(), TTL),
+    ])
 
-    const existingReservation = await redisClient.get(REDIS_KEY)
-
-    if (existingReservation && existingReservation !== req.user.id.toString()) {
-      return res.status(403).json({ error: "Forbidden" })
-    }
-
-    await redisClient.del(REDIS_KEY)
-
-    res.status(200);
+    res.status(201).send()
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

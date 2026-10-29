@@ -2,7 +2,7 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { getEventWithSeats, listEvents } from '../services/eventService';
-import { reservationKey } from '../services/bookingService';
+import { seatReservationKey } from '../services/bookingService';
 import { formatPrice, seatLabel } from '../utils/helpers';
 import redisClient from '../redis';
 
@@ -22,7 +22,7 @@ router.get('/:id', async (req, res) => {
 
   // Merge active reservations (Redis) with confirmed bookings (DB) in one round trip.
   const holders = await redisClient.mget(
-    event.seats.map((seat) => reservationKey(seat.id))
+    event.seats.map((seat) => seatReservationKey(seat.id))
   );
 
   const seats = event.seats.map((seat, i) => ({

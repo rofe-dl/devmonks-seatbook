@@ -2,7 +2,7 @@ import { Router } from 'express';
 import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { formatPrice } from '../utils/helpers';
-import { checkSeatAvailability, reservationKey } from '../services/bookingService';
+import { checkSeatAvailability, seatReservationKey, userReservationKey } from '../services/bookingService';
 import redisClient from '../redis'
 
 const router = Router();
@@ -11,8 +11,10 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   try {
     const { seatId } = req.body;
 
-    const REDIS_KEY = reservationKey(seatId)
-    const existingReservation = await redisClient.get(REDIS_KEY)
+    const REDIS_KEY_SEAT_TO_USER = seatReservationKey(seatId)
+    const REDIS_KEY_USER_TO_SEAT = userReservationKey(req.user!.id?.toString())
+
+    const existingReservation = await redisClient.get(REDIS_KEY_SEAT_TO_USER)
 
     if (!existingReservation) {
       // they should not be able to book a seat directly without having a reservation first
@@ -36,7 +38,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     });
 
     // TODO: Have some actual logger maybe
-    redisClient.del(REDIS_KEY).catch((err) => {
+    redisClient.del(REDIS_KEY_SEAT_TO_USER, REDIS_KEY_USER_TO_SEAT).catch((err) => {
       console.log(err)
     })
 
