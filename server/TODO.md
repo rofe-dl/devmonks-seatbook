@@ -12,7 +12,7 @@
 12. Add validation layer
 13. Proper TypeScript types
 14. Frontend design system
-15. Pagination in events
+15. Pagination in events with server side search
 
 Possible problems:
 1. Unique index on booking for seatId + status

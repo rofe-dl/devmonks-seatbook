@@ -8,9 +8,12 @@ import { formatPrice, seatLabel } from '../utils/helpers';
 const router = Router();
 
 router.get('/', async (req, res) => {
-  // TODO: Pagination
-  const events = await listEvents();
-  res.json(events);
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 12));
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+  const result = await listEvents({ page, limit, search: search || undefined });
+  res.json(result);
 });
 
 router.get('/:id', async (req, res) => {
