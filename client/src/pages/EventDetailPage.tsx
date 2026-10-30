@@ -1,52 +1,74 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
+
+import { getEvent, EventDetail, EventSeat } from '../lib/api/event';
+import { createReservation, getEventReservation } from '../lib/api/reservation';
+import { createBooking } from '../lib/api/booking';
+import { ApiError, errorMessage } from '../lib/api/http';
 
 export default function EventDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState<any>(null);
-  const [rows, setRows] = useState<any[][]>([]);
-  const [selectedSeat, setSelectedSeat] = useState<any>(null);
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [rows, setRows] = useState<EventSeat[][]>([]);
+  const [selectedSeat, setSelectedSeat] = useState<EventSeat | null>(null);
   const [availableCount, setAvailableCount] = useState(0);
   const [reservationExpiry, setReservationExpiry] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
+  const [error, setError] = useState('');
 
   const fetchEvent = () => {
-    fetch(`${API_URL}/events/${id}`)
-      .then((res) => res.json())
+    if (!id) return;
+
+    getEvent(id)
       .then((data) => {
+        // Unknown ids come back (HTTP 200) as `{ success: false, message }`.
+        if (!('seats' in data)) {
+          setError((data as { message?: string }).message ?? 'Event not found');
+          return;
+        }
+
+        setError('');
         setEvent(data);
 
-        const grouped: any[][] = [];
-        data.seats.forEach((seat: any) => {
+        const grouped: EventSeat[][] = [];
+        data.seats.forEach((seat) => {
           if (!grouped[seat.row]) grouped[seat.row] = [];
           grouped[seat.row].push(seat);
         });
         setRows(grouped);
 
-        let count = 0;
-        data.seats.forEach((seat: any) => {
-          if (seat.available) count++;
-        });
-        setAvailableCount(count);
+        setAvailableCount(data.seats.filter((seat) => seat.available).length);
+      })
+      .catch((err) => {
+        if (event) {
+          // Re-fetch after a reservation/booking change: keep the seat map, just warn.
+          setToast({ type: 'error', message: `😢 ${errorMessage(err)}` });
+          setTimeout(() => setToast(null), 3000);
+        } else {
+          setError(errorMessage(err));
+        }
       });
   };
 
   const fetchUserReservations = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!id || !localStorage.getItem('token')) return;
 
-    fetch(`${API_URL}/reservations/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && !data.error) {
-          setSelectedSeat(data.seat);
-          setReservationExpiry(new Date(data.expiresAt).getTime());
+    getEventReservation(id)
+      .then((reservation) => {
+        if (reservation) {
+          // The held seat shows up as unavailable in the event payload.
+          setSelectedSeat({ ...reservation.seat, available: false });
+          setReservationExpiry(new Date(reservation.expiresAt).getTime());
         }
+      })
+      .catch((err) => {
+        // 401 is expected for anonymous visitors (the page is public);
+        // surface anything else.
+        if (err instanceof ApiError && err.status === 401) return;
+        setToast({ type: 'error', message: `😢 ${errorMessage(err)}` });
+        setTimeout(() => setToast(null), 3000);
       });
   }
 
@@ -75,32 +97,24 @@ export default function EventDetailPage() {
     return () => clearInterval(interval);
   }, [reservationExpiry]);
 
-  const handleReservation = async (seat: any) => {
-    setSelectedSeat(seat)
-
+  const handleReservation = async (seat: EventSeat) => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
 
-    const res = await fetch(`${API_URL}/reservations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ seatId: seat.id }),
-    })
+    setSelectedSeat(seat);
 
-    const data = await res.json()
-
-    if (data.error) {
-      setToast({ type: 'error', message: '😢 ' + data.error });
-      setTimeout(() => setToast(null), 3000);
-      setSelectedSeat(null)
-    } else {
-      setReservationExpiry(new Date(data.expiresAt).getTime());
+    try {
+      const reservation = await createReservation(seat.id);
+      setReservationExpiry(new Date(reservation.expiresAt).getTime());
       fetchEvent();
+    } catch (err) {
+      setToast({ type: 'error', message: `😢 ${errorMessage(err)}` });
+      setTimeout(() => setToast(null), 3000);
+      setSelectedSeat(null);
     }
-
   }
 
   const handleBook = async () => {
@@ -116,23 +130,35 @@ export default function EventDetailPage() {
       return;
     }
 
-    const res = await fetch(`${API_URL}/bookings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ seatId: selectedSeat.id }),
-    });
-    const data = await res.json();
-
-    if (res.ok) {
+    try {
+      await createBooking(selectedSeat.id);
       setToast({ type: 'success', message: `🎉 Woohoo! Seat ${selectedSeat.label} is yours!` });
       setTimeout(() => setToast(null), 3000);
       setSelectedSeat(null);
       fetchEvent();
-    } else {
-      setToast({ type: 'error', message: '😢 ' + data.error });
+    } catch (err) {
+      setToast({ type: 'error', message: `😢 ${errorMessage(err)}` });
       setTimeout(() => setToast(null), 3000);
     }
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32">
+        <div className="text-6xl">😢</div>
+        <p className="mt-6 text-white/60">{error}</p>
+        <button
+          onClick={() => {
+            setError('');
+            fetchEvent();
+          }}
+          className="mt-8 px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-purple via-brand-pink to-brand-orange font-bold hover:scale-105 transition-all duration-300"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   if (!event) {
     return (
@@ -197,7 +223,7 @@ export default function EventDetailPage() {
           <div className="space-y-3">
             {rows.map((row, i) => (
               <div key={i} className="flex gap-3 justify-center">
-                {row.map((seat: any) => (
+                {row.map((seat) => (
                   <div
                     key={seat.id}
                     onClick={() => handleReservation(seat)}

@@ -1,48 +1,48 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { API_URL } from '../config';
+import { getMyBookings, cancelBooking, MyBooking } from '../lib/api/booking';
+import { errorMessage } from '../lib/api/http';
 
 export default function MyBookingsPage() {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<MyBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalSpent, setTotalSpent] = useState(0);
   const [upcoming, setUpcoming] = useState(0);
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
 
   const loadBookings = () => {
-    fetch(`${API_URL}/bookings/mine`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    })
-      .then((res) => res.json())
+    getMyBookings()
       .then((data) => {
         setBookings(data);
 
         let spent = 0;
         let up = 0;
-        data.forEach((b: any) => {
+        data.forEach((b) => {
           spent += parseFloat(b.event.price.replace('$', ''));
           if (new Date(b.event.startsAt) > new Date()) up++;
         });
         setTotalSpent(spent);
         setUpcoming(up);
-        setLoading(false);
-      });
+      })
+      .catch((err) => setToast({ type: 'error', message: `😢 ${errorMessage(err)}` }))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     loadBookings();
   }, []);
 
-  const cancelBooking = async (id: number) => {
+  const handleCancel = async (id: number) => {
     if (!window.confirm('Are you sure you want to cancel? 😢')) return;
 
-    await fetch(`${API_URL}/bookings/${id}/cancel`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
-    setToast('Booking cancelled successfully! ✅');
-    setTimeout(() => setToast(''), 3000);
+    try {
+      await cancelBooking(id);
+      setToast({ type: 'success', message: 'Booking cancelled successfully! ✅' });
+    } catch (err) {
+      setToast({ type: 'error', message: `😢 ${errorMessage(err)}` });
+    }
+    setTimeout(() => setToast(null), 3000);
     loadBookings();
   };
 
@@ -58,8 +58,13 @@ export default function MyBookingsPage() {
   return (
     <div>
       {toast && (
-        <div className="fixed top-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl font-medium bg-gradient-to-r from-success to-success-dark">
-          {toast}
+        <div
+          className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl font-medium ${toast.type === 'success'
+            ? 'bg-gradient-to-r from-success to-success-dark'
+            : 'bg-gradient-to-r from-danger to-danger-dark'
+            }`}
+        >
+          {toast.message}
         </div>
       )}
 
@@ -112,7 +117,7 @@ export default function MyBookingsPage() {
               <span className="font-bold">{b.event.price}</span>
               <span className="px-3 py-1 rounded-full bg-success/20 text-success-light text-sm">✓ {b.status}</span>
               <button
-                onClick={() => cancelBooking(b.id)}
+                onClick={() => handleCancel(b.id)}
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-danger to-danger-dark text-sm font-semibold hover:scale-105 transition-all duration-300"
               >
                 Cancel

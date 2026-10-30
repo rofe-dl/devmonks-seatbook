@@ -83,7 +83,7 @@ router.post('/', requireAuth, validateBody(createEventBodySchema), async (req: A
     res.status(201).json(event);
   } catch (err) {
     console.log(err);
-    res.status(500).send('Something went wrong');
+    res.status(500).json({ error: 'Something went wrong' });
   }
 });
 

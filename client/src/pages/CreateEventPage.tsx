@@ -1,7 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { API_URL } from '../config';
+import { createEvent } from '../lib/api/event';
+import { errorMessage } from '../lib/api/http';
 
 export default function CreateEventPage() {
   const navigate = useNavigate();
@@ -19,33 +20,18 @@ export default function CreateEventPage() {
     setError('');
 
     try {
-      const res = await fetch(`${API_URL}/events`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          venue,
-          startsAt: new Date(startsAt).toISOString(),
-          rows: Number(rows),
-          cols: Number(cols),
-          priceCents: Math.round(parseFloat(price) * 100),
-        }),
+      const event = await createEvent({
+        title,
+        description,
+        venue,
+        startsAt: new Date(startsAt).toISOString(),
+        rows: Number(rows),
+        cols: Number(cols),
+        priceCents: Math.round(parseFloat(price) * 100),
       });
-
-      if (!res.ok) {
-        setError(await res.text());
-        return;
-      }
-
-      const event = await res.json();
       navigate(`/events/${event.id}`);
     } catch (err) {
-      console.error(err);
-      setError('Something went wrong 😢');
+      setError(errorMessage(err));
     }
   };
 

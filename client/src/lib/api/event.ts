@@ -1,4 +1,4 @@
-import { API_URL } from '../../config';
+import { request } from './http';
 
 export interface EventSummary {
   id: number;
@@ -50,7 +50,7 @@ export interface GetEventsParams {
  * Server-side pagination (limit clamped to 1..50, default 12) and
  * case-insensitive search over title + venue.
  */
-export async function getEvents(params: GetEventsParams = {}): Promise<EventListResult> {
+export function getEvents(params: GetEventsParams = {}): Promise<EventListResult> {
   const { page = 1, limit = 12, search = '' } = params;
 
   const query = new URLSearchParams({
@@ -60,11 +60,7 @@ export async function getEvents(params: GetEventsParams = {}): Promise<EventList
   const trimmed = search.trim();
   if (trimmed) query.set('search', trimmed);
 
-  const res = await fetch(`${API_URL}/events?${query.toString()}`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch events (HTTP ${res.status})`);
-  }
-  return res.json();
+  return request<EventListResult>(`/events?${query.toString()}`);
 }
 
 /**
@@ -73,10 +69,41 @@ export async function getEvents(params: GetEventsParams = {}): Promise<EventList
  * Note: the server responds with HTTP 200 and `{ success: false, message }`
  * for unknown ids, so callers may want to check for `success === false`.
  */
-export async function getEvent(id: number | string): Promise<EventDetail> {
-  const res = await fetch(`${API_URL}/events/${id}`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch event (HTTP ${res.status})`);
-  }
-  return res.json();
+export function getEvent(id: number | string): Promise<EventDetail> {
+  return request<EventDetail>(`/events/${id}`);
+}
+
+/** Body for POST /events (mirrors the server's createEventBodySchema). */
+export interface CreateEventInput {
+  title: string;
+  description: string;
+  venue: string;
+  startsAt: string;
+  rows: number;
+  cols: number;
+  priceCents?: number;
+}
+
+/** The event row returned by POST /events (201). */
+export interface CreatedEvent {
+  id: number;
+  title: string;
+  description: string;
+  venue: string;
+  startsAt: string;
+  rows: number;
+  cols: number;
+  priceCents: number;
+  organizerId: number;
+  createdAt: string;
+}
+
+/**
+ * POST /events
+ *
+ * Organizer-only: 403 for other roles, 400 with a validation error message
+ * for bad input. Returns the created event row.
+ */
+export function createEvent(input: CreateEventInput): Promise<CreatedEvent> {
+  return request<CreatedEvent>('/events', { method: 'POST', body: input, auth: true });
 }
