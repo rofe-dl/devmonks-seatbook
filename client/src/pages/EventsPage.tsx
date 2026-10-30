@@ -42,7 +42,7 @@ export default function EventsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-16 h-16 border-4 border-[#a855f7] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-brand-purple border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-6 text-white/60 animate-pulse">Loading amazing events... ✨</p>
       </div>
     );
@@ -53,7 +53,7 @@ export default function EventsPage() {
   return (
     <div>
       <section className="text-center py-16">
-        <span className="px-4 py-1 rounded-full bg-[#a855f7]/20 text-[#d8b4fe] text-sm font-medium">
+        <span className="px-4 py-1 rounded-full bg-brand-purple/20 text-brand-purple-light text-sm font-medium">
           🚀 The future of seat booking
         </span>
         <h1 className="mt-6 text-6xl font-extrabold leading-tight">
@@ -80,18 +80,18 @@ export default function EventsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="🔍 Search events..."
-          className="mt-10 w-full max-w-xl px-6 py-4 rounded-2xl glass text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#a855f7]"
+          className="mt-10 w-full max-w-xl px-6 py-4 rounded-2xl glass text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-purple"
         />
       </section>
 
       {error && (
-        <div className="mb-8 p-4 rounded-2xl bg-[#ef4444]/20 border border-[#ef4444]/40 text-[#fca5a5]">{error}</div>
+        <div className="mb-8 p-4 rounded-2xl bg-danger/20 border border-danger/40 text-danger-light">{error}</div>
       )}
 
       {featured && (
         <Link to={`/events/${featured.id}`}>
-          <div className="mb-12 p-10 rounded-3xl bg-gradient-to-br from-[#a855f7]/30 via-[#ec4899]/20 to-[#f97316]/20 border border-white/10 hover:scale-[1.01] transition-all duration-500 glow">
-            <span className="px-3 py-1 rounded-full bg-[#f97316] text-xs font-bold">🔥 FEATURED</span>
+          <div className="mb-12 p-10 rounded-3xl bg-gradient-to-br from-brand-purple/30 via-brand-pink/20 to-brand-orange/20 border border-white/10 hover:scale-[1.01] transition-all duration-500 glow">
+            <span className="px-3 py-1 rounded-full bg-brand-orange text-xs font-bold">🔥 FEATURED</span>
             <h2 className="mt-4 text-4xl font-bold">{featured.title}</h2>
             <p className="mt-2 text-white/60">📍 {featured.venue}</p>
             <p className="text-white/60">
@@ -104,7 +104,7 @@ export default function EventsPage() {
             </p>
             <div className="mt-6 flex items-center gap-4">
               <span className="text-3xl font-extrabold gradient-text">{featured.price}</span>
-              <span className="px-3 py-1 rounded-full bg-[#22c55e]/20 text-[#86efac] text-sm">
+              <span className="px-3 py-1 rounded-full bg-success/20 text-success-light text-sm">
                 {featured.seatsLeft} seats left
               </span>
             </div>
@@ -118,8 +118,8 @@ export default function EventsPage() {
       <div className="grid grid-cols-3 gap-6">
         {filtered.map((event) => (
           <Link to={`/events/${event.id}`} key={event.id}>
-            <div className="glass rounded-3xl p-6 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 h-full">
-              <div className="h-32 rounded-2xl bg-gradient-to-br from-[#a855f7] via-[#ec4899] to-[#f97316] flex items-center justify-center text-5xl animate-float">
+            <div className="glass rounded-3xl p-6 hover:scale-105 hover:shadow-2xl hover:shadow-brand-purple/20 transition-all duration-300 h-full">
+              <div className="h-32 rounded-2xl bg-gradient-to-br from-brand-purple via-brand-pink to-brand-orange flex items-center justify-center text-5xl animate-float">
                 🎭
               </div>
               <h3 className="mt-4 text-xl font-bold">{event.title}</h3>
@@ -134,7 +134,7 @@ export default function EventsPage() {
               </p>
               <div className="mt-4 flex items-center justify-between">
                 <span className="text-2xl font-extrabold gradient-text">{event.price}</span>
-                <span className="px-3 py-1 rounded-full bg-[#22c55e]/20 text-[#86efac] text-sm">
+                <span className="px-3 py-1 rounded-full bg-success/20 text-success-light text-sm">
                   {event.seatsLeft} seats left
                 </span>
               </div>

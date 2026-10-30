@@ -49,28 +49,28 @@ export default function LoginPage() {
               placeholder="👤 Full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
             />
           )}
           <input
             placeholder="📧 Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
           <input
             type="password"
             placeholder="🔒 Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
-          {error && <p className="text-[#fca5a5] text-sm">⚠️ {error}</p>}
+          {error && <p className="text-danger-light text-sm">⚠️ {error}</p>}
           <GradientButton type="submit">{isLogin ? 'Sign In 🚀' : 'Create Account ✨'}</GradientButton>
         </form>
         <p className="mt-6 text-center text-white/50">
           {isLogin ? "Don't have an account? " : 'Already have an account? '}
-          <span onClick={() => setIsLogin(!isLogin)} className="text-[#a855f7] cursor-pointer hover:underline">
+          <span onClick={() => setIsLogin(!isLogin)} className="text-brand-purple cursor-pointer hover:underline">
             {isLogin ? 'Sign up' : 'Sign in'}
           </span>
         </p>

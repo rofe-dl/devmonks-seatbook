@@ -71,50 +71,50 @@ export default function CreateEventPage() {
             placeholder="🎭 Event title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
           <textarea
             placeholder="📝 Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
           <input
             placeholder="📍 Venue"
             value={venue}
             onChange={(e) => setVenue(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
           <input
             type="datetime-local"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
-            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+            className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
           />
           <div className="grid grid-cols-3 gap-4">
             <input
               type="number"
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
-              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
             />
             <input
               type="number"
               value={cols}
               onChange={(e) => setCols(Number(e.target.value))}
-              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
             />
             <input
               placeholder="💰 Price"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#a855f7] transition-all duration-300"
+              className="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-brand-purple transition-all duration-300"
             />
           </div>
-          {error && <p className="text-[#fca5a5] text-sm">⚠️ {error}</p>}
+          {error && <p className="text-danger-light text-sm">⚠️ {error}</p>}
           <button
             type="submit"
-            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#a855f7] via-[#ec4899] to-[#f97316] font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-500/40 transition-all duration-300"
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-purple via-brand-pink to-brand-orange font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-brand-pink/40 transition-all duration-300"
           >
             Launch Event 🚀
           </button>
@@ -128,7 +128,7 @@ export default function CreateEventPage() {
                 {row.map((label) => (
                   <div
                     key={label}
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold bg-gradient-to-br from-[#a855f7]/60 to-[#6366f1]/60"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold bg-gradient-to-br from-brand-purple/60 to-brand-indigo/60"
                   >
                     {label}
                   </div>

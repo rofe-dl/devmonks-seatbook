@@ -20,8 +20,8 @@ export default function Navbar() {
         <div className="flex items-center gap-8">
           <Link
             to="/"
-            className={`text-sm font-medium transition-all duration-300 hover:text-[#a855f7] ${
-              location.pathname === '/' ? 'text-[#a855f7]' : 'text-white/70'
+            className={`text-sm font-medium transition-all duration-300 hover:text-brand-purple ${
+              location.pathname === '/' ? 'text-brand-purple' : 'text-white/70'
             }`}
           >
             🎉 Events
@@ -29,8 +29,8 @@ export default function Navbar() {
           {user && (
             <Link
               to="/my-bookings"
-              className={`text-sm font-medium transition-all duration-300 hover:text-[#a855f7] ${
-                location.pathname === '/my-bookings' ? 'text-[#a855f7]' : 'text-white/70'
+              className={`text-sm font-medium transition-all duration-300 hover:text-brand-purple ${
+                location.pathname === '/my-bookings' ? 'text-brand-purple' : 'text-white/70'
               }`}
             >
               🎟️ My Bookings
@@ -39,8 +39,8 @@ export default function Navbar() {
           {user?.role === 'ORGANIZER' && (
             <Link
               to="/events/new"
-              className={`text-sm font-medium transition-all duration-300 hover:text-[#a855f7] ${
-                location.pathname === '/events/new' ? 'text-[#a855f7]' : 'text-white/70'
+              className={`text-sm font-medium transition-all duration-300 hover:text-brand-purple ${
+                location.pathname === '/events/new' ? 'text-brand-purple' : 'text-white/70'
               }`}
             >
               ➕ Create Event
@@ -48,7 +48,7 @@ export default function Navbar() {
           )}
           {user ? (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] flex items-center justify-center font-bold">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-r from-brand-purple to-brand-pink flex items-center justify-center font-bold">
                 {user.name[0]}
               </div>
               <button onClick={logout} className="text-sm text-white/50 hover:text-white transition-all duration-300">
@@ -58,7 +58,7 @@ export default function Navbar() {
           ) : (
             <Link
               to="/login"
-              className="px-5 py-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] text-sm font-semibold hover:scale-105 transition-all duration-300 shadow-lg shadow-purple-500/30"
+              className="px-5 py-2 rounded-full bg-gradient-to-r from-brand-purple to-brand-pink text-sm font-semibold hover:scale-105 transition-all duration-300 shadow-lg shadow-brand-purple/30"
             >
               Get Started 🚀
             </Link>

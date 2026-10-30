@@ -137,7 +137,7 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-16 h-16 border-4 border-[#ec4899] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-16 h-16 border-4 border-brand-pink border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-6 text-white/60 animate-pulse">Loading event... 🎭</p>
       </div>
     );
@@ -154,16 +154,16 @@ export default function EventDetailPage() {
       {toast && (
         <div
           className={`fixed top-24 right-6 z-50 px-6 py-4 rounded-2xl shadow-2xl font-medium ${toast.type === 'success'
-            ? 'bg-gradient-to-r from-[#22c55e] to-[#16a34a]'
-            : 'bg-gradient-to-r from-[#ef4444] to-[#dc2626]'
+            ? 'bg-gradient-to-r from-success to-success-dark'
+            : 'bg-gradient-to-r from-danger to-danger-dark'
             }`}
         >
           {toast.message}
         </div>
       )}
 
-      <div className="rounded-3xl p-10 bg-gradient-to-br from-[#a855f7]/30 via-[#ec4899]/20 to-[#f97316]/20 border border-white/10 glow">
-        <span className="px-3 py-1 rounded-full bg-[#a855f7]/30 text-[#d8b4fe] text-xs font-bold">
+      <div className="rounded-3xl p-10 bg-gradient-to-br from-brand-purple/30 via-brand-pink/20 to-brand-orange/20 border border-white/10 glow">
+        <span className="px-3 py-1 rounded-full bg-brand-purple/30 text-brand-purple-light text-xs font-bold">
           {isPast ? '⏰ ENDED' : '✨ LIVE NOW'}
         </span>
         <h1 className="mt-4 text-5xl font-extrabold">{event.title}</h1>
@@ -183,13 +183,13 @@ export default function EventDetailPage() {
           <p className="text-white/50 mb-6">
             {availableCount} of {event.seats.length} available · {percentBooked}% booked 🔥
           </p>
-          <div className="w-full h-2 rounded-full bg-gradient-to-r from-[#a855f7] to-[#ec4899] mb-10 opacity-60"></div>
+          <div className="w-full h-2 rounded-full bg-gradient-to-r from-brand-purple to-brand-pink mb-10 opacity-60"></div>
           {reservationExpiry !== null && selectedSeat && (
-            <div className="mb-6 flex items-center justify-between rounded-2xl border border-[#ec4899]/40 bg-gradient-to-r from-[#ec4899]/15 to-[#f97316]/15 px-5 py-4">
+            <div className="mb-6 flex items-center justify-between rounded-2xl border border-brand-pink/40 bg-gradient-to-r from-brand-pink/15 to-brand-orange/15 px-5 py-4">
               <span className="text-sm font-semibold text-white/80">
                 🪑 Seat {selectedSeat.label} is held - finish booking before it drops!
               </span>
-              <span className={`font-mono text-2xl font-bold ${timeLeft <= 60 ? 'animate-pulse text-red-400' : 'text-[#f9a8d4]'}`}>
+              <span className={`font-mono text-2xl font-bold ${timeLeft <= 60 ? 'animate-pulse text-red-400' : 'text-brand-pink-light'}`}>
                 {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
               </span>
             </div>
@@ -202,10 +202,10 @@ export default function EventDetailPage() {
                     key={seat.id}
                     onClick={() => handleReservation(seat)}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 hover:scale-110 ${selectedSeat?.id === seat.id
-                      ? 'bg-gradient-to-br from-[#ec4899] to-[#f97316] shadow-lg shadow-pink-500/50 scale-110'
+                      ? 'bg-gradient-to-br from-brand-pink to-brand-orange shadow-lg shadow-brand-pink/50 scale-110'
                       : seat.available
-                        ? 'bg-gradient-to-br from-[#a855f7]/60 to-[#6366f1]/60 hover:from-[#a855f7] hover:to-[#6366f1]'
-                        : 'bg-gradient-to-br from-[#a855f7]/20 to-[#6366f1]/20 text-white/30'
+                        ? 'bg-gradient-to-br from-brand-purple/60 to-brand-indigo/60 hover:from-brand-purple hover:to-brand-indigo'
+                        : 'bg-gradient-to-br from-brand-purple/20 to-brand-indigo/20 text-white/30'
                       }`}
                   >
                     {seat.label}
@@ -238,7 +238,7 @@ export default function EventDetailPage() {
           </div>
           <button
             onClick={handleBook}
-            className="mt-8 w-full py-4 rounded-2xl bg-gradient-to-r from-[#a855f7] via-[#ec4899] to-[#f97316] font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-500/40 transition-all duration-300"
+            className="mt-8 w-full py-4 rounded-2xl bg-gradient-to-r from-brand-purple via-brand-pink to-brand-orange font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-brand-pink/40 transition-all duration-300"
           >
             Book Now 🎟️
           </button>

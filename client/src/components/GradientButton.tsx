@@ -13,7 +13,7 @@ export default function GradientButton({ children, onClick, type = 'button', dis
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#a855f7] via-[#ec4899] to-[#f97316] font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-pink-500/40 transition-all duration-300 disabled:opacity-50"
+      className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-purple via-brand-pink to-brand-orange font-bold text-lg hover:scale-[1.02] hover:shadow-2xl hover:shadow-brand-pink/40 transition-all duration-300 disabled:opacity-50"
     >
       {children}
     </button>

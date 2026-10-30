@@ -2,8 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand palette (space-separated RGB so Tailwind can apply opacity) */
+  --brand-purple: 168 85 247; /* #a855f7 */
+  --brand-pink: 236 72 153; /* #ec4899 */
+  --brand-orange: 249 115 22; /* #f97316 */
+  --brand-indigo: 99 102 241; /* #6366f1 */
+  --brand-purple-light: 216 180 254; /* #d8b4fe */
+  --brand-pink-light: 249 168 212; /* #f9a8d4 */
+
+  /* Status colors */
+  --success: 34 197 94; /* #22c55e */
+  --success-dark: 22 163 74; /* #16a34a */
+  --success-light: 134 239 172; /* #86efac */
+  --danger: 239 68 68; /* #ef4444 */
+  --danger-dark: 220 38 38; /* #dc2626 */
+  --danger-light: 252 165 165; /* #fca5a5 */
+
+  /* Page background */
+  --bg-from: 15 12 41; /* #0f0c29 */
+  --bg-mid: 48 43 99; /* #302b63 */
+  --bg-to: 36 36 62; /* #24243e */
+}
+
 body {
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background: linear-gradient(135deg, rgb(var(--bg-from)) 0%, rgb(var(--bg-mid)) 50%, rgb(var(--bg-to)) 100%);
   min-height: 100vh;
   color: white;
   font-family: 'Inter', system-ui, sans-serif;
@@ -17,7 +40,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #a855f7, #ec4899, #f97316);
+  background: linear-gradient(90deg, rgb(var(--brand-purple)), rgb(var(--brand-pink)), rgb(var(--brand-orange)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -38,5 +61,5 @@ body {
 }
 
 .glow {
-  box-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 40px rgb(var(--brand-purple) / 0.4);
 }
