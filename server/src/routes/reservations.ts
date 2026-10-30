@@ -27,7 +27,6 @@ function reservationPayload(r: Reservation & { seat: Seat }) {
 
 router.post('/', requireAuth, validateBody(createReservationBodySchema), async (req: AuthRequest, res) => {
   try {
-    // TODO: If user picks seat already reserved or booked, mark it on FE immediately as well
     const { seatId } = req.body;
 
     if (!req.user?.id) {
