@@ -53,14 +53,19 @@ router.get('/mine', requireAuth, async (req: AuthRequest, res) => {
 });
 
 router.post('/:id/cancel', requireAuth, async (req: AuthRequest, res) => {
-  const id = parseInt(req.params.id);
+  try {
+    const id = parseInt(req.params.id);
 
-  await prisma.booking.updateMany({
-    where: { id, status: 'CONFIRMED', userId: req.user!.id },
-    data: { status: 'CANCELLED', cancelledAt: new Date() },
-  });
+    await prisma.booking.updateMany({
+      where: { id, status: 'CONFIRMED', userId: req.user!.id },
+      data: { status: 'CANCELLED', cancelledAt: new Date() },
+    });
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (err: any) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

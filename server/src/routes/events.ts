@@ -9,44 +9,54 @@ import { validateBody, createEventBodySchema } from '../middleware/validators';
 const router = Router();
 
 router.get('/', async (req, res) => {
-  const page = Math.max(1, parseInt(req.query.page as string) || 1);
-  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 12));
-  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 12));
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
 
-  const result = await listEvents({ page, limit, search: search || undefined });
-  res.json(result);
+    const result = await listEvents({ page, limit, search: search || undefined });
+    res.json(result);
+  } catch (err: any) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get('/:id', async (req, res) => {
-  const event = await getEventWithSeats(req);
+  try {
+    const event = await getEventWithSeats(req);
 
-  if (!event) {
-    return res.json({ success: false, message: 'Event not found' });
+    if (!event) {
+      return res.json({ success: false, message: 'Event not found' });
+    }
+
+    // Merge active reservations (DB) with confirmed bookings (DB).
+    const holders = await getEventReservationHolders(event.id);
+
+    const seats = event.seats.map((seat) => ({
+      id: seat.id,
+      row: seat.row,
+      col: seat.col,
+      label: seat.label,
+      available: seat.bookings.length === 0 && !holders.has(seat.id),
+    }));
+
+    res.json({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      venue: event.venue,
+      startsAt: event.startsAt,
+      price: formatPrice(event.priceCents),
+      rows: event.rows,
+      cols: event.cols,
+      organizer: event.organizer,
+      seats,
+    });
+  } catch (err: any) {
+    console.log(err);
+    res.status(500).json({ error: err.message });
   }
-
-  // Merge active reservations (DB) with confirmed bookings (DB).
-  const holders = await getEventReservationHolders(event.id);
-
-  const seats = event.seats.map((seat) => ({
-    id: seat.id,
-    row: seat.row,
-    col: seat.col,
-    label: seat.label,
-    available: seat.bookings.length === 0 && !holders.has(seat.id),
-  }));
-
-  res.json({
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    venue: event.venue,
-    startsAt: event.startsAt,
-    price: formatPrice(event.priceCents),
-    rows: event.rows,
-    cols: event.cols,
-    organizer: event.organizer,
-    seats,
-  });
 });
 
 router.post('/', requireAuth, validateBody(createEventBodySchema), async (req: AuthRequest, res) => {
