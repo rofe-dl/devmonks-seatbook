@@ -3,14 +3,15 @@ import prisma from '../db';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { formatPrice } from '../utils/helpers';
 import { bookReservedSeat } from '../services/bookingService';
+import { validateBody, createBookingBodySchema } from '../middleware/validators';
 
 const router = Router();
 
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(createBookingBodySchema), async (req: AuthRequest, res) => {
   try {
     const { seatId } = req.body;
 
-    const result = await bookReservedSeat(req.user!.id, Number(seatId));
+    const result = await bookReservedSeat(req.user!.id, seatId);
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Reservation, Seat } from '@prisma/client';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { reserveSeat, getUserEventReservation } from '../services/bookingService';
+import { validateBody, createReservationBodySchema } from '../middleware/validators';
 
 const router = Router();
 
@@ -24,7 +25,7 @@ function reservationPayload(r: Reservation & { seat: Seat }) {
   };
 }
 
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(createReservationBodySchema), async (req: AuthRequest, res) => {
   try {
     // TODO: If user picks seat already reserved or booked, mark it on FE immediately as well
     const { seatId } = req.body;
@@ -33,7 +34,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
       return res.status(500).json({ error: "User ID not found!" });
     }
 
-    const result = await reserveSeat(req.user.id, Number(seatId));
+    const result = await reserveSeat(req.user.id, seatId);
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.error });

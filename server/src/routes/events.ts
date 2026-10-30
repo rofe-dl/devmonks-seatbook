@@ -4,6 +4,7 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 import { getEventWithSeats, listEvents } from '../services/eventService';
 import { getEventReservationHolders } from '../services/bookingService';
 import { formatPrice, seatLabel } from '../utils/helpers';
+import { validateBody, createEventBodySchema } from '../middleware/validators';
 
 const router = Router();
 
@@ -48,21 +49,15 @@ router.get('/:id', async (req, res) => {
   });
 });
 
-router.post('/', requireAuth, async (req: AuthRequest, res) => {
+router.post('/', requireAuth, validateBody(createEventBodySchema), async (req: AuthRequest, res) => {
   if (req.user!.role !== 'ORGANIZER') {
     return res.status(403).json({ error: 'Only organizers can create events' });
   }
 
   try {
+    // Validated by createEventBodySchema: required fields present, rows/cols
+    // within limits, startsAt coerced to a Date, priceCents defaulted to 0.
     const { title, description, venue, startsAt, rows, cols, priceCents } = req.body;
-
-    if (!title || !venue || !startsAt || !rows || !cols) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    if (rows > 26 || cols > 30) {
-      return res.status(400).json({ error: 'Seat grid too large (max 26 rows x 30 cols)' });
-    }
 
     const seats = [];
     for (let r = 0; r < rows; r++) {
@@ -74,12 +69,12 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
     const event = await prisma.event.create({
       data: {
         title,
-        description: description || '',
+        description,
         venue,
-        startsAt: new Date(startsAt),
+        startsAt,
         rows,
         cols,
-        priceCents: priceCents || 0,
+        priceCents,
         organizerId: req.user!.id,
         seats: { create: seats },
       },

@@ -2,16 +2,13 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../db';
+import { validateBody, registerBodySchema, loginBodySchema } from '../middleware/validators';
 
 const router = Router();
 
-router.post('/register', async (req, res) => {
+router.post('/register', validateBody(registerBodySchema), async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
-
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'email, password and name are required' });
-    }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -19,7 +16,7 @@ router.post('/register', async (req, res) => {
         email,
         name,
         passwordHash,
-        role: role === 'ORGANIZER' ? 'ORGANIZER' : 'ATTENDEE',
+        role: role ?? 'ATTENDEE',
       },
     });
 
@@ -33,7 +30,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', validateBody(loginBodySchema), async (req, res) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
