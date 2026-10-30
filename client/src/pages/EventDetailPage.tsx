@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -13,7 +14,7 @@ export default function EventDetailPage() {
   const [toast, setToast] = useState<{ type: string; message: string } | null>(null);
 
   const fetchEvent = () => {
-    fetch(`http://localhost:4000/events/${id}`)
+    fetch(`${API_URL}/events/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setEvent(data);
@@ -37,7 +38,7 @@ export default function EventDetailPage() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    fetch(`http://localhost:4000/reservations/${id}`, {
+    fetch(`${API_URL}/reservations/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -83,7 +84,7 @@ export default function EventDetailPage() {
       return;
     }
 
-    const res = await fetch(`http://localhost:4000/reservations`, {
+    const res = await fetch(`${API_URL}/reservations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ seatId: seat.id }),
@@ -115,7 +116,7 @@ export default function EventDetailPage() {
       return;
     }
 
-    const res = await fetch('http://localhost:4000/bookings', {
+    const res = await fetch(`${API_URL}/bookings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ seatId: selectedSeat.id }),
