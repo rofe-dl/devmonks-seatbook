@@ -55,9 +55,8 @@ router.get('/mine', requireAuth, async (req: AuthRequest, res) => {
 router.post('/:id/cancel', requireAuth, async (req: AuthRequest, res) => {
   const id = parseInt(req.params.id);
 
-  // TODO: Needs validation and security checks here
   await prisma.booking.updateMany({
-    where: { id, status: 'CONFIRMED' },
+    where: { id, status: 'CONFIRMED', userId: req.user!.id },
     data: { status: 'CANCELLED', cancelledAt: new Date() },
   });
 
